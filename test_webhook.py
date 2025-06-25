@@ -4,6 +4,7 @@ from fastapi.responses import Response
 import json
 import urllib.parse
 import time
+from fastapi.middleware.cors import CORSMiddleware
 from twilio.twiml.voice_response import VoiceResponse
 
 app = FastAPI()
@@ -11,8 +12,20 @@ app = FastAPI()
 # In-memory storage for responses during call session
 call_responses = {}
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # ✅ Allow all origins
+    allow_credentials=False,  # ❌ Must be False when using allow_origins=["*"]
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # FIXED VERSION - The key issue is URL encoding in recording_url
+@app.get("/jmd")
+async def jmd():
+    return "Jai mata Di"
 
 @app.post("/voice/{session_id}")
 async def handle_call(session_id: str, request: Request):
