@@ -5,3 +5,10 @@ supabase
 gunicorn>=21.2.0
 uvicorn[standard]>=0.24.0
 python-multipart>=0.0.6
+
+azure-storage-blob
+
+
+# 🔒 Pin to GLIBC-compatible version to avoid Rust ABI issues
+cryptography<42.0
+
