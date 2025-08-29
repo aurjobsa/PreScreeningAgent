@@ -344,14 +344,7 @@ async def upload_resumes(
                 detail=f"Only PDF files are allowed. Invalid file: {file.filename}"
             )
     
-    # Check file size limits (5MB per file)
-    max_file_size = 5 * 1024 * 1024  # 5MB
-    for file in resumes:
-        if file.size and file.size > max_file_size:
-            raise HTTPException(
-                status_code=400,
-                detail=f"File size exceeds 5MB limit: {file.filename}"
-            )
+ 
     
     
     
@@ -411,13 +404,7 @@ async def upload_job_descriptions(
             detail=f"Only PDF files are allowed. Invalid file: {job_description.filename}"
         )
     
-    # Check file size limits (5MB per file)
-    max_file_size = 5 * 1024 * 1024  # 5MB
-    if job_description.size and job_description.size > max_file_size:
-        raise HTTPException(
-            status_code=400,
-            detail=f"File size exceeds 5MB limit: {job_description.filename}"
-        )
+   
     
     try:
         # Upload job description file
