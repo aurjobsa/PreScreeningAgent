@@ -337,12 +337,12 @@ async def upload_resumes(
         )
     
     # Validate file types
-    for file in resumes:
-        if not validate_pdf_file(file):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Only PDF files are allowed. Invalid file: {file.filename}"
-            )
+    # for file in resumes:
+    #     if not validate_pdf_file(file):
+    #         raise HTTPException(
+    #             status_code=400,
+    #             detail=f"Only PDF files are allowed. Invalid file: {file.filename}"
+    #         )
     
  
     
