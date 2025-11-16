@@ -96,7 +96,7 @@ async def handle_call(session_id: str, request: Request):
         question = questions[current_question - 1]
         print(f"❓ Asking question {current_question}: {question[:50]}...")
         
-        response.say(f"Question {current_question}. {question}. Speak your answer after the beep", voice='Polly.Joanna')
+        response.say(f"Question {current_question}. {question}. ", voice='Polly.Joanna')
         
         # 🔥 FIX: Properly encode the recording URL parameters
         # The issue is that encoded_questions contains special characters that need to be URL encoded again
@@ -117,7 +117,7 @@ async def handle_call(session_id: str, request: Request):
             method="POST",
             max_length=60,
             timeout=5,
-            play_beep=True,
+            # play_beep=True,
             finish_on_key="#"
         )
         
