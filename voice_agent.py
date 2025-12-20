@@ -584,8 +584,8 @@ class VoiceAgent:
             }
 
             requests.post(
-                # Config.CALL_RESULT_WEBHOOK_URL,
-                "http://localhost:7071/api/call_result",
+                Config.CALL_RESULT_WEBHOOK_URL,
+                # "http://localhost:7071/api/call_result",
 
                   
                 json=payload,

@@ -63,7 +63,7 @@ class Config:
     HANGUP_PHRASES = os.getenv("HANGUP_PHRASES", "bye,goodbye,thank you,thanks,not interested,अलविदा,धन्यवाद").split(",")
     DTMF_HANGUP_KEYS = os.getenv("DTMF_HANGUP_KEYS", "#,0").split(",")
     HANGUP_MIN_LEN = int(os.getenv("HANGUP_MIN_LEN", "2"))
-    CALL_RESULT_WEBHOOK = os.getenv("CALL_RESULT_WEBHOOK", "/call_result")
+    CALL_RESULT_WEBHOOK_URL = os.getenv("CALL_RESULT_WEBHOOK_URL", "/call_result")
     @classmethod
     def validate(cls):
         """Validate required configuration"""
