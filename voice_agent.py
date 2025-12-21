@@ -8,6 +8,12 @@ import time
 from typing import Optional, Dict, Any, List
 from openai import AsyncAzureOpenAI
 
+import asyncio
+import json
+import requests as http
+import logging
+
+
 from config import Config, SYSTEM_PROMPT
 from sarvam_transcriber import SarvamTranscriber
 from sarvam_synthesizer import SarvamSynthesizer
@@ -531,71 +537,98 @@ class VoiceAgent:
             
         except Exception as e:
             logger.error(f"❌ Hangup error: {e}")
-    
+
     async def cleanup(self):
-        """Cleanup resources"""
-        logger.info("🧹 Cleaning up agent resources")
-        
-        self.conversation_ended = True
-        
-        # Cancel tasks
-        tasks = [self.transcription_handler_task, self.synthesis_handler_task, self.idle_task]
-        for task in tasks:
-            if task and not task.done():
-                task.cancel()
-                try:
-                    await task
-                except asyncio.CancelledError:
-                    pass
-        
-        # Stop components
-        if self.transcriber:
-            await self.transcriber.stop()
-        
-        if self.synthesizer:
-            await self.synthesizer.stop()
-        
-        # Log stats
-        call_duration = time.time() - self.call_start_time
-        logger.info(f"📊 Call stats:")
-        logger.info(f"   Duration: {call_duration:.1f}s")
-        logger.info(f"   Transcripts: {self.total_transcripts}")
-        logger.info(f"   Responses: {self.total_responses}")
-        
-        if self.transcriber:
-            logger.info(f"   Transcriber: {self.transcriber.get_stats()}")
-        
-        if self.synthesizer:
-            logger.info(f"   Synthesizer: {self.synthesizer.get_stats()}")
-                # -----------------------------
-        # Send call result webhook
-        # -----------------------------
-        if not self.webhook_sent:
-          self.webhook_sent = True
-          try:
-            import requests
+        payload = {
+            "call_sid": self.call_sid,
+            "workflow_run_id": self.workflow_run_id,
+            "chat_id": self.chat_id,
+            # "duration": int(self.call_duration),
+            "transcript": self.transcript  # must be list of dicts
+        }
 
-            payload = {
-                "call_sid": self.call_sid,
-                "chat_id": self.chat_id,
-                "transcript": self.transcript,
-                "duration": int(call_duration),
-                "workflow_run_id": self.workflow_run_id
-            }
+        logging.info(f"📤 Webhook payload: {json.dumps(payload)}")
 
-            requests.post(
+        def send_webhook():
+            resp = http.post(
                 Config.CALL_RESULT_WEBHOOK_URL,
-                # "http://localhost:7071/api/call_result",
+                headers={"Content-Type": "application/json"},
+                json=payload,
+                timeout=15
+            )
+            return resp.status_code, resp.text
+
+        try:
+            status, text = await asyncio.to_thread(send_webhook)
+            logging.info(f"✅ Webhook response: {status} {text}")
+        except Exception as e:
+            logging.error(f"❌ Webhook failed: {e}")
+
+    
+    # # async def cleanup(self):
+    #     """Cleanup resources"""
+    #     logger.info("🧹 Cleaning up agent resources")
+        
+    #     self.conversation_ended = True
+        
+    #     # Cancel tasks
+    #     tasks = [self.transcription_handler_task, self.synthesis_handler_task, self.idle_task]
+    #     for task in tasks:
+    #         if task and not task.done():
+    #             task.cancel()
+    #             try:
+    #                 await task
+    #             except asyncio.CancelledError:
+    #                 pass
+        
+    #     # Stop components
+    #     if self.transcriber:
+    #         await self.transcriber.stop()
+        
+    #     if self.synthesizer:
+    #         await self.synthesizer.stop()
+        
+    #     # Log stats
+    #     call_duration = time.time() - self.call_start_time
+    #     logger.info(f"📊 Call stats:")
+    #     logger.info(f"   Duration: {call_duration:.1f}s")
+    #     logger.info(f"   Transcripts: {self.total_transcripts}")
+    #     logger.info(f"   Responses: {self.total_responses}")
+        
+    #     if self.transcriber:
+    #         logger.info(f"   Transcriber: {self.transcriber.get_stats()}")
+        
+    #     if self.synthesizer:
+    #         logger.info(f"   Synthesizer: {self.synthesizer.get_stats()}")
+    #             # -----------------------------
+    #     # Send call result webhook
+    #     # -----------------------------
+    #     if not self.webhook_sent:
+    #       self.webhook_sent = True
+    #       try:
+    #         import requests
+
+    #         payload = {
+    #             "call_sid": self.call_sid,
+    #             "chat_id": self.chat_id,
+    #             "transcript": self.transcript,
+    #             "duration": int(call_duration),
+    #             "workflow_run_id": self.workflow_run_id
+    #         }
+
+    #         response = requests.post(
+    #             Config.CALL_RESULT_WEBHOOK_URL,
+    #             # "http://localhost:7071/api/call_result",
 
                   
-                json=payload,
-                timeout=5
-            )
+    #             json=payload,
+    #             timeout=5
+    #         )
+    #         logger.info(f"call details ---------------------------:{response.text} --------------{response.status_code}")
+    #         logger.info(f"📤 Call result webhook sent for workflow_run_id {self.workflow_run_id} webhook is {Config.CALL_RESULT_WEBHOOK_URL}")
 
-            logger.info(f"📤 Call result webhook sent for workflow_run_id {self.workflow_run_id}, resume is {self.resume_text} and jd is {self.jd_text}")
-
-          except Exception as e:
-            logger.error(f"❌ Failed to send call result webhook: {e}")
+    #       except Exception as e:
+    #         logger.error(f"❌ Failed to send call result webhook: {e}")
 
         
-        logger.info("✅ Cleanup complete")
+    #     logger.info("✅ Cleanup complete")
